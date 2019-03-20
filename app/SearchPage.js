@@ -17,16 +17,16 @@ function urlForQueryAndPage(key, value, pageNumber) {
     pretty: "1",
     encoding: "json",
     listing_type: "buy",
-    action: "search_listing",
+    action: "search_listings",
     page: pageNumber,
   };
   data[key] = value;
 
-  const queryString = Object.keys(data)
+  const querystring = Object.keys(data)
     .map(key => `${key}=${encodeURIComponent(data[key])}`)
     .join("&");
 
-  return `https://api.nestoria.co.uk/api?${queryString}`;
+  return "https://api.nestoria.co.uk/api?" + querystring;
 }
 
 export default class SearchPage extends Component {
@@ -35,6 +35,7 @@ export default class SearchPage extends Component {
     this.state = {
       searchString: "london",
       isLoading: false,
+      message: "",
     };
   }
 
@@ -43,13 +44,33 @@ export default class SearchPage extends Component {
   };
 
   _executeQuery = query => {
-    console.log(query);
     this.setState({ isLoading: true });
+
+    fetch(query)
+      .then(response => response.json())
+      .then(json => this._handleResponse(json.response))
+      .catch(error =>
+        this.setState({
+          isLoading: false,
+          messsage: `Something bad happened: ${error}`,
+        })
+      );
   };
 
   _onSearchPressed = () => {
     const query = urlForQueryAndPage("place_name", this.state.searchString, 1);
     this._executeQuery(query);
+  };
+
+  _handleResponse = response => {
+    this.setState({ isLoading: false, message: "" });
+
+    if (response.application_response_code.substr(0, 1) === "1") {
+      console.log(`Properties found: ${response.listings.length}`);
+    } else {
+      this.setState({ message: "Location not recoginzed. Please try again." });
+      console.log(this.state.message);
+    }
   };
 
   static navigationOptions = {
@@ -81,6 +102,7 @@ export default class SearchPage extends Component {
           style={styles.image}
         />
         {spinner}
+        <Text style={styles.description}>{this.state.message}</Text>
       </View>
     );
   }
