@@ -1,6 +1,7 @@
-"use strict";
+// "use strict";
 
 import React, { Component } from "react";
+import SearchResults from "./SearchResults";
 import {
   StyleSheet,
   Text,
@@ -66,10 +67,11 @@ export default class SearchPage extends Component {
     this.setState({ isLoading: false, message: "" });
 
     if (response.application_response_code.substr(0, 1) === "1") {
-      console.log(`Properties found: ${response.listings.length}`);
+      this.props.navigation.navigate("Results", {
+        listings: response.listings,
+      });
     } else {
       this.setState({ message: "Location not recoginzed. Please try again." });
-      console.log(this.state.message);
     }
   };
 
